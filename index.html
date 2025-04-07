@@ -122,16 +122,16 @@
       player.vy += 1.5;
       player.y += player.vy;
 
-      // Impulso horizontal durante o salto
-      if (!player.grounded) {
-        player.x += 1.5; // avança enquanto está no ar
+      // Avança levemente no ar até o limite de x = 120
+      if (!player.grounded && player.x < 120) {
+        player.x += 1.5;
       }
 
       if (player.y >= 600) {
         player.y = 600;
         player.vy = 0;
         player.grounded = true;
-        player.x = 50; // volta à posição original ao aterrissar
+        // Chicão agora mantém sua posição à frente
       }
     }
 
