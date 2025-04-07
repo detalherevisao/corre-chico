@@ -145,7 +145,6 @@
         player.grounded = true;
       }
 
-      // Impede o jogador de sair para cima ou fora da tela
       if (player.y < 0) player.y = 0;
       if (player.x < 0) player.x = 0;
       if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
@@ -243,14 +242,14 @@
 
     window.addEventListener('keydown', (e) => {
       if ((e.key === ' ' || e.key === 'ArrowUp') && player.grounded) {
-        player.vy = -32;
+        player.vy = -20; // Pulo mais baixo
         player.grounded = false;
       }
     });
 
     canvas.addEventListener('touchstart', () => {
       if (player.grounded) {
-        player.vy = -32;
+        player.vy = -20; // Pulo mais baixo
         player.grounded = false;
       }
     });
