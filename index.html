@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Corre, Chico!</title>
   <style>
     body {
@@ -14,7 +14,6 @@
 
     canvas {
       display: block;
-      background: #87CEEB;
     }
 
     #startButton, #restartButton {
@@ -61,10 +60,8 @@
 
     const playerImg = new Image();
     playerImg.src = 'runner.png';
-
     const dogImg = new Image();
     dogImg.src = 'dog_obstacle1.png';
-
     const bottleImg = new Image();
     bottleImg.src = 'garrafa1.png';
 
@@ -122,7 +119,6 @@
       player.vy += 1.0;
       player.y += player.vy;
 
-      // Avança durante o pulo até x = 160 (máximo)
       if (!player.grounded && player.x < 160) {
         player.x += 1.5;
       }
@@ -187,25 +183,28 @@
     }
 
     function gameLoop() {
-      if (!gameRunning) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBackground();
-      updatePlayer();
-      spawnObstacle();
-      spawnBottle();
-      updateObstacles();
-      updateBottles();
-      drawGameObjects();
-      updateScore();
-
-      if (frame % 500 === 0) speed += 0.2;
-      frame++;
-      animationId = requestAnimationFrame(gameLoop);
+      try {
+        if (!gameRunning) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBackground();
+        updatePlayer();
+        spawnObstacle();
+        spawnBottle();
+        updateObstacles();
+        updateBottles();
+        drawGameObjects();
+        updateScore();
+        if (frame % 500 === 0) speed += 0.2;
+        frame++;
+        animationId = requestAnimationFrame(gameLoop);
+      } catch (e) {
+        console.error("Erro durante o jogo:", e);
+        endGame();
+      }
     }
 
     function isColliding(a, b) {
-      const padding = 10; // margem de segurança
+      const padding = 10;
       return (
         a.x + padding < b.x + b.width - padding &&
         a.x + a.width - padding > b.x + padding &&
