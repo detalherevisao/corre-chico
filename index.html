@@ -15,7 +15,7 @@
 
     #gameCanvas {
       display: block;
-      background: linear-gradient(#87CEEB, #ffffff);
+      background: #87CEEB;
     }
 
     #startButton, #restartButton {
@@ -76,8 +76,9 @@
     let score = 0;
     let doublePoints = false;
     let doublePointsTimer = 0;
-    let speed = 3;
+    let speed = 2; // começa mais lento
     let frame = 0;
+    let groundOffset = 0;
 
     function startGame() {
       gameRunning = true;
@@ -85,10 +86,11 @@
       obstacles = [];
       bottles = [];
       score = 0;
-      speed = 3;
+      speed = 2;
       frame = 0;
       doublePoints = false;
       doublePointsTimer = 0;
+      groundOffset = 0;
       startButton.style.display = 'none';
       restartButton.style.display = 'none';
       loop();
@@ -110,7 +112,9 @@
       ctx.fillRect(0, canvas.height - 120, canvas.width, 20);
 
       ctx.strokeStyle = '#fff';
-      for (let i = 0; i < canvas.width; i += 40) {
+      groundOffset -= speed;
+      if (groundOffset <= -40) groundOffset = 0;
+      for (let i = groundOffset; i < canvas.width; i += 40) {
         ctx.beginPath();
         ctx.moveTo(i, canvas.height - 110);
         ctx.lineTo(i + 20, canvas.height - 110);
@@ -144,7 +148,8 @@
         player.grounded = true;
       }
 
-      if (frame % 100 === 0) {
+      // Obstáculos aleatórios
+      if (Math.random() < 0.02) {
         obstacles.push({ x: canvas.width, y: 600, width: 50, height: 50 });
       }
       for (let obs of obstacles) {
@@ -152,7 +157,8 @@
         if (isColliding(player, obs)) gameOver();
       }
 
-      if (frame % 250 === 0) {
+      // Itens aleatórios (mais raros)
+      if (Math.random() < 0.005) {
         bottles.push({ x: canvas.width, y: 550, width: 30, height: 30 });
       }
       for (let b of bottles) {
@@ -175,7 +181,7 @@
         doublePoints = false;
       }
 
-      if (frame % 300 === 0) speed += 0.2;
+      if (frame % 400 === 0) speed += 0.2;
 
       frame++;
     }
@@ -217,4 +223,3 @@
   </script>
 </body>
 </html>
-
