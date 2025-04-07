@@ -3,209 +3,218 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORRE, CHICO!</title>
+  <title>Corre, Chico!</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
+      background: #87CEEB;
       font-family: sans-serif;
-      background: #000;
+      user-select: none;
     }
-    canvas {
+
+    #gameCanvas {
       display: block;
-      margin: 0 auto;
-      background: #222;
+      background: linear-gradient(#87CEEB, #ffffff);
     }
-    #startBtn, #restartBtn {
+
+    #startButton, #restartButton {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      padding: 15px 30px;
-      background-color: #00b894;
-      border: none;
-      color: white;
+      padding: 10px 20px;
       font-size: 18px;
-      cursor: pointer;
+      background-color: #222;
+      color: white;
+      border: none;
       border-radius: 10px;
+      cursor: pointer;
+      z-index: 10;
     }
-    #startBtn { top: 40%; }
-    #restartBtn { top: 50%; display: none; }
+
+    #startButton { top: 40%; }
+    #restartButton { top: 60%; display: none; }
+
     #score {
       position: absolute;
       top: 10px;
       left: 10px;
-      color: white;
       font-size: 20px;
-      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 2px black;
+      z-index: 10;
     }
   </style>
 </head>
 <body>
+  <canvas id="gameCanvas" width="480" height="720"></canvas>
   <div id="score">Pontos: 0</div>
-  <button id="startBtn">CHICÃO ESTÁ PRONTO</button>
-  <button id="restartBtn">RECOMEÇAR</button>
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <button id="startButton">CHICÃO ESTÁ PRONTO</button>
+  <button id="restartButton">RECOMEÇAR</button>
 
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
 
-    const startBtn = document.getElementById("startBtn");
-    const restartBtn = document.getElementById("restartBtn");
-    const scoreDisplay = document.getElementById("score");
+    const startButton = document.getElementById('startButton');
+    const restartButton = document.getElementById('restartButton');
+    const scoreDisplay = document.getElementById('score');
 
-    // Imagens do jogo
-    const runnerImg = new Image(); runnerImg.src = "runner.png";
-    const bottleImg = new Image(); bottleImg.src = "energy_bottle.png";
-    const dogImg = new Image(); dogImg.src = "dog_obstacle.png";
-    const bgImg = new Image(); bgImg.src = "background.png";
+    const playerImg = new Image();
+    playerImg.src = 'runner.png';
 
-    // Jogo
-    let runner = { x: 50, y: 300, width: 50, height: 50, vy: 0, jumping: false };
-    let gravity = 1.5;
+    const dogImg = new Image();
+    dogImg.src = 'dog_obstacle.png';
+
+    const bottleImg = new Image();
+    bottleImg.src = 'energy_bottle.png';
+
+    let gameRunning = false;
+    let player = { x: 50, y: 600, width: 50, height: 50, vy: 0, grounded: true };
+    let obstacles = [];
+    let bottles = [];
     let score = 0;
     let doublePoints = false;
-    let doubleTimer = 0;
-    let obstacles = [];
-    let items = [];
-    let bgX = 0;
-    let gameSpeed = 4;
-    let playing = false;
+    let doublePointsTimer = 0;
+    let speed = 3;
+    let frame = 0;
 
-    function drawBackground() {
-      bgX -= gameSpeed / 2;
-      if (bgX <= -canvas.width) bgX = 0;
-      ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
-      ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
+    function startGame() {
+      gameRunning = true;
+      player.y = 600;
+      obstacles = [];
+      bottles = [];
+      score = 0;
+      speed = 3;
+      frame = 0;
+      doublePoints = false;
+      doublePointsTimer = 0;
+      startButton.style.display = 'none';
+      restartButton.style.display = 'none';
+      loop();
     }
 
-    function drawRunner() {
-      ctx.drawImage(runnerImg, runner.x, runner.y, runner.width, runner.height);
+    function gameOver() {
+      gameRunning = false;
+      restartButton.style.display = 'block';
+    }
+
+    function drawBackground() {
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#228B22';
+      ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+
+      ctx.fillStyle = '#444';
+      ctx.fillRect(0, canvas.height - 120, canvas.width, 20);
+
+      ctx.strokeStyle = '#fff';
+      for (let i = 0; i < canvas.width; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(i, canvas.height - 110);
+        ctx.lineTo(i + 20, canvas.height - 110);
+        ctx.stroke();
+      }
+    }
+
+    function drawPlayer() {
+      ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
     }
 
     function drawObstacles() {
-      for (let o of obstacles) {
-        o.x -= gameSpeed;
-        ctx.drawImage(dogImg, o.x, o.y, o.width, o.height);
+      for (let obs of obstacles) {
+        ctx.drawImage(dogImg, obs.x, obs.y, obs.width, obs.height);
       }
     }
 
-    function drawItems() {
-      for (let i of items) {
-        i.x -= gameSpeed;
-        ctx.drawImage(bottleImg, i.x, i.y, i.width, i.height);
+    function drawBottles() {
+      for (let b of bottles) {
+        ctx.drawImage(bottleImg, b.x, b.y, b.width, b.height);
       }
     }
 
-    function updateRunner() {
-      runner.y += runner.vy;
-      runner.vy += gravity;
-      if (runner.y > 300) {
-        runner.y = 300;
-        runner.vy = 0;
-        runner.jumping = false;
+    function update() {
+      player.vy += 1.5;
+      player.y += player.vy;
+
+      if (player.y > 600) {
+        player.y = 600;
+        player.vy = 0;
+        player.grounded = true;
       }
-    }
 
-    function spawnObstacle() {
-      if (Math.random() < 0.02) {
-        obstacles.push({ x: canvas.width, y: 310, width: 50, height: 50 });
+      if (frame % 100 === 0) {
+        obstacles.push({ x: canvas.width, y: 600, width: 50, height: 50 });
       }
-    }
-
-    function spawnItem() {
-      if (Math.random() < 0.01) {
-        items.push({ x: canvas.width, y: 250, width: 30, height: 30 });
+      for (let obs of obstacles) {
+        obs.x -= speed;
+        if (isColliding(player, obs)) gameOver();
       }
+
+      if (frame % 250 === 0) {
+        bottles.push({ x: canvas.width, y: 550, width: 30, height: 30 });
+      }
+      for (let b of bottles) {
+        b.x -= speed;
+        if (isColliding(player, b)) {
+          doublePoints = true;
+          doublePointsTimer = 300;
+          b.x = -100;
+        }
+      }
+
+      if (frame % 10 === 0) {
+        score += doublePoints ? 2 : 1;
+        scoreDisplay.textContent = `Pontos: ${score}`;
+      }
+
+      if (doublePointsTimer > 0) {
+        doublePointsTimer--;
+      } else {
+        doublePoints = false;
+      }
+
+      if (frame % 300 === 0) speed += 0.2;
+
+      frame++;
     }
 
-    function checkCollision(a, b) {
-      return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+    function isColliding(a, b) {
+      return a.x < b.x + b.width && a.x + a.width > b.x &&
+             a.y < b.y + b.height && a.y + a.height > b.y;
     }
 
-    function updateGame() {
+    function loop() {
+      if (!gameRunning) return;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
-      drawRunner();
+      update();
+      drawPlayer();
       drawObstacles();
-      drawItems();
-      updateRunner();
+      drawBottles();
 
-      spawnObstacle();
-      spawnItem();
-
-      obstacles = obstacles.filter(o => o.x + o.width > 0);
-      items = items.filter(i => i.x + i.width > 0);
-
-      for (let o of obstacles) {
-        if (checkCollision(runner, o)) {
-          endGame();
-          return;
-        }
-      }
-
-      for (let i = items.length - 1; i >= 0; i--) {
-        if (checkCollision(runner, items[i])) {
-          doublePoints = true;
-          doubleTimer = 300; // 5s a 60fps
-          items.splice(i, 1);
-        }
-      }
-
-      if (doublePoints) {
-        score += 2;
-        doubleTimer--;
-        if (doubleTimer <= 0) doublePoints = false;
-      } else {
-        score++;
-      }
-
-      scoreDisplay.textContent = "Pontos: " + score;
-
-      gameSpeed += 0.002;
-
-      requestAnimationFrame(updateGame);
+      requestAnimationFrame(loop);
     }
 
-    function endGame() {
-      playing = false;
-      restartBtn.style.display = "block";
-    }
-
-    function startGame() {
-      // Reset
-      runner.y = 300;
-      runner.vy = 0;
-      runner.jumping = false;
-      obstacles = [];
-      items = [];
-      score = 0;
-      doublePoints = false;
-      gameSpeed = 4;
-      bgX = 0;
-      playing = true;
-      restartBtn.style.display = "none";
-      startBtn.style.display = "none";
-      requestAnimationFrame(updateGame);
-    }
-
-    // Controles
-    document.addEventListener("keydown", (e) => {
-      if (e.code === "Space" && !runner.jumping) {
-        runner.vy = -20;
-        runner.jumping = true;
+    window.addEventListener('keydown', e => {
+      if ((e.key === ' ' || e.key === 'ArrowUp') && player.grounded) {
+        player.vy = -25;
+        player.grounded = false;
       }
     });
 
-    canvas.addEventListener("touchstart", () => {
-      if (!runner.jumping) {
-        runner.vy = -20;
-        runner.jumping = true;
+    canvas.addEventListener('touchstart', () => {
+      if (player.grounded) {
+        player.vy = -25;
+        player.grounded = false;
       }
     });
 
-    startBtn.onclick = startGame;
-    restartBtn.onclick = startGame;
+    startButton.onclick = startGame;
+    restartButton.onclick = startGame;
   </script>
 </body>
 </html>
+
