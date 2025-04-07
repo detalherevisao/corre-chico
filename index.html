@@ -67,6 +67,22 @@
 
     let gameRunning = false;
     let animationId = null;
+    let assetsLoaded = 0;
+    const totalAssets = 3;
+
+    // Desativa o botão até que as imagens estejam prontas
+    startBtn.disabled = true;
+
+    function checkAssetsLoaded() {
+      assetsLoaded++;
+      if (assetsLoaded === totalAssets) {
+        startBtn.disabled = false;
+      }
+    }
+
+    playerImg.onload = checkAssetsLoaded;
+    dogImg.onload = checkAssetsLoaded;
+    bottleImg.onload = checkAssetsLoaded;
 
     let player, obstacles, bottles, score, doublePoints, doubleTimer, speed, frame, bgOffset;
 
