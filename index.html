@@ -70,30 +70,26 @@
     bottleImg.src = 'garrafa1.png';
 
     let gameRunning = false;
-    let player = { x: 50, y: 600, width: 50, height: 50, vy: 0, grounded: true };
-    let obstacles = [];
-    let bottles = [];
-    let score = 0;
-    let doublePoints = false;
-    let doublePointsTimer = 0;
-    let speed = 2;
-    let frame = 0;
-    let groundOffset = 0;
+    let player, obstacles, bottles, score, doublePoints, doublePointsTimer, speed, frame, groundOffset;
 
-    function startGame() {
-      gameRunning = true;
-      player.y = 600;
+    function resetGameState() {
+      player = { x: 50, y: 600, width: 50, height: 50, vy: 0, grounded: true };
       obstacles = [];
       bottles = [];
       score = 0;
-      speed = 2;
-      frame = 0;
       doublePoints = false;
       doublePointsTimer = 0;
+      speed = 2;
+      frame = 0;
       groundOffset = 0;
+    }
+
+    function startGame() {
+      resetGameState();
+      gameRunning = true;
       startButton.style.display = 'none';
       restartButton.style.display = 'none';
-      loop();
+      requestAnimationFrame(loop);
     }
 
     function gameOver() {
@@ -122,17 +118,13 @@
       }
     }
 
-    function drawPlayer() {
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
       ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-    }
-
-    function drawObstacles() {
       for (let obs of obstacles) {
         ctx.drawImage(dogImg, obs.x, obs.y, obs.width, obs.height);
       }
-    }
-
-    function drawBottles() {
       for (let b of bottles) {
         ctx.drawImage(bottleImg, b.x, b.y, b.width, b.height);
       }
@@ -148,31 +140,29 @@
         player.grounded = true;
       }
 
-      // Apenas 1 obstáculo por vez
       if (obstacles.length === 0 && Math.random() < 0.02) {
         obstacles.push({ x: canvas.width, y: 600, width: 50, height: 50 });
       }
 
-      for (let i = obstacles.length - 1; i >= 0; i--) {
-        obstacles[i].x -= speed;
-        if (isColliding(player, obstacles[i])) gameOver();
-        if (obstacles[i].x + obstacles[i].width < 0) obstacles.splice(i, 1);
-      }
+      obstacles.forEach((obs, i) => {
+        obs.x -= speed;
+        if (obs.x + obs.width < 0) obstacles.splice(i, 1);
+        if (isColliding(player, obs)) gameOver();
+      });
 
-      // Itens aleatórios (mais raros)
       if (Math.random() < 0.005) {
         bottles.push({ x: canvas.width, y: 550, width: 30, height: 30 });
       }
-      for (let i = bottles.length - 1; i >= 0; i--) {
-        bottles[i].x -= speed;
-        if (isColliding(player, bottles[i])) {
+
+      bottles.forEach((b, i) => {
+        b.x -= speed;
+        if (b.x + b.width < 0) bottles.splice(i, 1);
+        if (isColliding(player, b)) {
           doublePoints = true;
           doublePointsTimer = 300;
           bottles.splice(i, 1);
-        } else if (bottles[i].x + bottles[i].width < 0) {
-          bottles.splice(i, 1);
         }
-      }
+      });
 
       if (frame % 10 === 0) {
         score += doublePoints ? 2 : 1;
@@ -190,22 +180,16 @@
       frame++;
     }
 
+    function loop() {
+      if (!gameRunning) return;
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
     function isColliding(a, b) {
       return a.x < b.x + b.width && a.x + a.width > b.x &&
              a.y < b.y + b.height && a.y + a.height > b.y;
-    }
-
-    function loop() {
-      if (!gameRunning) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBackground();
-      update();
-      drawPlayer();
-      drawObstacles();
-      drawBottles();
-
-      requestAnimationFrame(loop);
     }
 
     window.addEventListener('keydown', e => {
