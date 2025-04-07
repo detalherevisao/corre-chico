@@ -119,19 +119,17 @@
     }
 
     function updatePlayer() {
-      player.vy += 1.5;
+      player.vy += 1.0; // Gravidade suavizada
       player.y += player.vy;
 
-      // Avança levemente no ar até o limite de x = 120
       if (!player.grounded && player.x < 120) {
-        player.x += 1.5;
+        player.x += 1.5; // impulso horizontal
       }
 
       if (player.y >= 600) {
         player.y = 600;
         player.vy = 0;
         player.grounded = true;
-        // Chicão agora mantém sua posição à frente
       }
     }
 
@@ -206,23 +204,26 @@
     }
 
     function isColliding(a, b) {
-      return a.x < b.x + b.width &&
-             a.x + a.width > b.x &&
-             a.y < b.y + b.height &&
-             a.y + a.height > b.y;
+      const padding = 10; // margem de segurança na colisão
+      return (
+        a.x + padding < b.x + b.width - padding &&
+        a.x + a.width - padding > b.x + padding &&
+        a.y + padding < b.y + b.height - padding &&
+        a.y + a.height - padding > b.y + padding
+      );
     }
 
     // Controles
     window.addEventListener('keydown', (e) => {
       if ((e.key === ' ' || e.key === 'ArrowUp') && player.grounded) {
-        player.vy = -28;
+        player.vy = -32; // PULO MAIS ALTO
         player.grounded = false;
       }
     });
 
     canvas.addEventListener('touchstart', () => {
       if (player.grounded) {
-        player.vy = -28;
+        player.vy = -32;
         player.grounded = false;
       }
     });
