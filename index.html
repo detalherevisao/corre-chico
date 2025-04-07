@@ -119,11 +119,12 @@
     }
 
     function updatePlayer() {
-      player.vy += 1.0; // Gravidade suavizada
+      player.vy += 1.0;
       player.y += player.vy;
 
-      if (!player.grounded && player.x < 120) {
-        player.x += 1.5; // impulso horizontal
+      // Avança durante o pulo até x = 160 (máximo)
+      if (!player.grounded && player.x < 160) {
+        player.x += 1.5;
       }
 
       if (player.y >= 600) {
@@ -204,7 +205,7 @@
     }
 
     function isColliding(a, b) {
-      const padding = 10; // margem de segurança na colisão
+      const padding = 10; // margem de segurança
       return (
         a.x + padding < b.x + b.width - padding &&
         a.x + a.width - padding > b.x + padding &&
@@ -213,10 +214,9 @@
       );
     }
 
-    // Controles
     window.addEventListener('keydown', (e) => {
       if ((e.key === ' ' || e.key === 'ArrowUp') && player.grounded) {
-        player.vy = -32; // PULO MAIS ALTO
+        player.vy = -32;
         player.grounded = false;
       }
     });
