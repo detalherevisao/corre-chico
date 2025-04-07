@@ -121,10 +121,17 @@
     function updatePlayer() {
       player.vy += 1.5;
       player.y += player.vy;
+
+      // Impulso horizontal durante o salto
+      if (!player.grounded) {
+        player.x += 1.5; // avança enquanto está no ar
+      }
+
       if (player.y >= 600) {
         player.y = 600;
         player.vy = 0;
         player.grounded = true;
+        player.x = 50; // volta à posição original ao aterrissar
       }
     }
 
@@ -205,6 +212,7 @@
              a.y + a.height > b.y;
     }
 
+    // Controles
     window.addEventListener('keydown', (e) => {
       if ((e.key === ' ' || e.key === 'ArrowUp') && player.grounded) {
         player.vy = -28;
