@@ -70,7 +70,6 @@
     let assetsLoaded = 0;
     const totalAssets = 3;
 
-    // Desativa o botão até que as imagens estejam prontas
     startBtn.disabled = true;
 
     function checkAssetsLoaded() {
@@ -99,6 +98,11 @@
     }
 
     function startGame() {
+      if (!playerImg.complete || !dogImg.complete || !bottleImg.complete) {
+        console.warn("Aguardando imagens carregarem...");
+        return;
+      }
+
       resetGame();
       gameRunning = true;
       startBtn.style.display = 'none';
@@ -179,6 +183,8 @@
     }
 
     function drawGameObjects() {
+      if (!playerImg.complete || !dogImg.complete || !bottleImg.complete) return;
+
       ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
       for (let obs of obstacles) {
         ctx.drawImage(dogImg, obs.x, obs.y, obs.width, obs.height);
